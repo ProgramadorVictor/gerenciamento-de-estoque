@@ -133,6 +133,9 @@ def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
 
     conn.close()
 
+def produtos_para_usuario():
+    print("Produtos disponiveis para o usuario")
+
 def emitir_relatorio(): #Função para emitir relatório
     print('')
 
@@ -143,20 +146,21 @@ def menu_funcao():
 
 def menu_estoquista():
     print("Estoquista. Por favor, selecione uma opção:")
+    print("0 - Voltar ao Menu Principal")
     print("1 - Adicionar Produto")
-    print("2 - Voltar ao Menu Principal")
 
 def menu_usuario():
     print("Usuário, Por favor. Selecione uma opção:")
+    print("0 - Voltar ao Menu Principal")
     print("1 - Solicitar Compra de Produto")
     print("2 - Emitir Relatório Semanal")
-    print("3 - Voltar ao Menu Principal")
+    print("3 - Listar os Produtos (Essa função não estava no trabalho. Mas é útil para visualizar os produtos disponiveis.)")
 
 def menu_gerente():
     print("Gerente, por favor, selecione uma opção:")
+    print("0 - Voltar ao Menu Principal")
     print("1 - Visualizar Solicitações Pendentes")
     print("2 - Aprovar/Rejeitar Solicitação")
-    print("3 - Voltar ao Menu Principal")
 
 def main():
     criar_banco() #Cria o banco de dados juntamente com a tabela.
@@ -169,21 +173,22 @@ def main():
             while True:
                 menu_gerente()
                 operacao = input("Digite o número da sua opção: ")
-                if operacao == '1': #Visualizar as solicitações de usuários pendentes
+                if operacao == '0':
+                    break
+                elif operacao == '1': #Visualizar as solicitações de usuários pendentes
                     visualizar_solicitacoes_pendentes()
                 elif operacao == '2': #Aprova ou rejeitar as solicitação.
                     id_solicitacao = int(input("Digite o ID da solicitação: "))
                     aprovacao = input("Digite 'aprovar' ou 'rejeitar': ")
                     aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao)
-                elif operacao == '3':
-                    break
-                #Listar os produtos disponiveis?
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
                 menu_estoquista()
                 operacao = input("Digite o número da sua opção: ")
-                if operacao == '1': # Adicionar um produto
+                if operacao == '0':
+                    break
+                elif operacao == '1': # Adicionar um produto
                     nome = input("Digite o nome do produto: ")
                     categoria = input("Digite a categoria do produto: ")
                     quantidade = int(input("Digite a quantidade do produto: "))
@@ -193,21 +198,21 @@ def main():
                     produto = Produto(nome, categoria, quantidade, preco, localizacao)
                     adicionar_produto(produto)
                     print("Produto adicionado com sucesso!")
-                elif operacao == '2': # Voltar para o menu principal
-                    break
         elif escolha == '2':
             print("Você selecionou: Usuário")
             while True:
                 menu_usuario()
                 operacao = input("Digite o número da sua opção: ")
-                if operacao == '1': # Solicitar compra de produto
+                if operacao == '0': # Voltar para o menu principal
+                    break
+                elif operacao == '1': # Solicitar compra de produto
                     produto_id = int(input("Digite o ID do produto: "))
                     quantidade = int(input("Digite a quantidade a ser solicitada: "))
                     solicitar_compra(produto_id, quantidade)
                 elif operacao == '2': # Emitir relatório semanal
                     emitir_relatorio()
-                elif operacao == '3': # Voltar para o menu principal
-                    break
+                elif operacao == '3': # Mostrar os produtos disponiveis
+                    produtos_para_usuario()
         else:
             print("Escolha inválida. Tente novamente.")
 
