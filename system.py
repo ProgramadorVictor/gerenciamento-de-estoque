@@ -175,11 +175,33 @@ def aprovar_rejeitar_solicitacao():
             print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
 
             cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada', id_solicitacao))
+    
+            descricao = f"Solicitação ID: {id_solicitacao}, Produto ID: {produto[0]}, Status de solicitação: {aprovacao}, Comprado: {quantidade_comprada}, Estoque Atual: {nova_quantidade}"
+            data_registro = datetime.datetime.now().isoformat()
+
+            cursor.execute('''
+                INSERT INTO registros (descricao, data_registro)
+                VALUES (?, ?)
+            ''', (descricao, data_registro))
+
     elif aprovacao.lower() == 'rejeitar':
         cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('rejeitada', id_solicitacao))
+
+        cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
+        produto = cursor.fetchone()
+
+        descricao = f"Solicitação ID: {id_solicitacao}, Produto ID: {produto[0]}, Status de solicitação: {aprovacao}, Solicitado: {solicitacao[2]}, Estoque Atual: {produto[3]}"
+        data_registro = datetime.datetime.now().isoformat()
+
+        cursor.execute('''
+            INSERT INTO registros (descricao, data_registro)
+            VALUES (?, ?)
+        ''', (descricao, data_registro))
+
         print("Solicitação rejeitada.")
     else:
         print("Opção de aprovação inválida. Use 'aprovar' ou 'rejeitar'.")
+
     conn.commit()
 
     conn.close()
