@@ -66,16 +66,20 @@ def solicitar_compra(produto_id, quantidade): #Solicitar compras, somente para u
     cursor.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,))
     produto = cursor.fetchone()
     
-    if produto is None:
+    if produto is None: #Se o produto_id não existir.
         print("Produto não encontrado. Solicitação de compra não pode ser realizada.")
     else:
-        cursor.execute('''
-            INSERT INTO solicitacoes (produto_id, quantidade, data, status)
-            VALUES (?, ?, ?, ?)
-        ''', (produto_id, quantidade, datetime.datetime.now().isoformat(), 'pendente')) #Se o produto existe, registra a solicitação.
+        estoque_disponivel = produto[3];
+        if quantidade > estoque_disponivel: #Caso o usuario solicite mais do que tem ocorre um aviso e retornar a quantidade disponivel.
+            print(f"Quantidades insuficiente no estoque. Disponivel no momento: {estoque_disponivel}.")
+        else:
+            cursor.execute('''
+                INSERT INTO solicitacoes (produto_id, quantidade, data, status)
+                VALUES (?, ?, ?, ?)
+            ''', (produto_id, quantidade, datetime.datetime.now().isoformat(), 'pendente')) #Se o produto existe, registra a solicitação.
 
-        conn.commit()
-        print("Solicitação de compra enviada com sucesso!")
+            conn.commit()
+            print("Solicitação de compra enviada com sucesso!")
     conn.close()
 
 def visualizar_solicitacoes_pendentes():
