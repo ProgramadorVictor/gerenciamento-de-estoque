@@ -89,6 +89,8 @@ def visualizar_solicitacoes_pendentes():
     # Exibe as solicitações pendentes
     cursor.execute("SELECT * FROM solicitacoes WHERE status = 'pendente'")
     solicitacoes = cursor.fetchall()
+    cursor.execute("SELECT * FROM produtos")
+    produtos = cursor.fetchall()
 
     if not solicitacoes: # Verifica se existe solicitações, se não existir, não mostra elas.
         print("Não há solicitações pendentes.")
@@ -98,6 +100,11 @@ def visualizar_solicitacoes_pendentes():
             quantidade = solicitacao[2]
             data = solicitacao[3]
             print(f"ID Solicitação: {solicitacao[0]} | Produto ID: {produto_id} | Quantidade: {quantidade} | Data: {data}")
+        for produto in produtos: #Melhorando a visualização para saber qual produto esta relacionado.
+            produto_id = produto[0]
+            produto_nome = produto[1]
+            quantidade = produto[3]
+            print(f"Produto ID: {produto_id} | Nome do Produto: {produto_nome} | Quantidade: {quantidade}")
 
     conn.close()
 
@@ -114,9 +121,10 @@ def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
         if aprovacao.lower() == 'aprovar':
             cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
             produto = cursor.fetchone()
+            quantidade_comprada = solicitacao[2]
 
             if produto:
-                nova_quantidade = produto[3] + solicitacao[2] 
+                nova_quantidade = produto[3] - quantidade_comprada
                 cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
                 print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
 
@@ -169,6 +177,7 @@ def main():
                     aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao)
                 elif operacao == '3':
                     break
+                #Listar os produtos disponiveis?
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
