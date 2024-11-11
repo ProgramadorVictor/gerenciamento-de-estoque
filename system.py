@@ -1,5 +1,6 @@
 import sqlite3
 import datetime
+import matplotlib.pyplot as plt
 #Comandos sqlite para não esquecer.
 # sqlite3 estoque.db
 # .tables, select * from produtos, .exit
@@ -48,6 +49,25 @@ def criar_banco():
             data_registro TEXT NOT NULL
         )
     ''')
+
+    #Descomente a linha abaixo caso queira produtos pré-definidos. Segue os passos abaixos.
+    #1. Descomente, rode o programa e comente novamente.
+
+    # produtos = [
+    #     ('Chocolate', 'Alimentos', 150, 5.99, 'Prateleira 1'),
+    #     ('Coca-Cola', 'Bebidas', 120, 3.50, 'Prateleira 2'),
+    #     ('Chips', 'Alimentos', 15, 4.50, 'Prateleira 3'),
+    #     ('Fanta', 'Bebidas', 18, 5.00, 'Prateleira 2'),
+    #     ('Amendoim', 'Alimentos', 30, 6.20, 'Prateleira 2'),
+    #     ('Pepsi', 'Bebidas', 12, 3.00, 'Prateleira 2'),
+    # ]
+
+    # for nome, categoria, quantidade, preco, localizacao in produtos:
+    #     cursor.execute('''
+    #         INSERT INTO produtos (nome, categoria, quantidade, preco, localizacao)
+    #         VALUES (?, ?, ?, ?, ?)
+    #     ''', (nome, categoria, quantidade, preco, localizacao))
+
 
     conn.commit() #Faz o commit das mudançãs
     conn.close() #Fecha a conexão
@@ -171,7 +191,7 @@ def aprovar_rejeitar_solicitacao():
         if(quantidade_comprada > produto_quantidade):
             print(f"Não temos a quantidade disponivel para aprovação da compra.")
         else:
-            nova_quantidade = produto[3] - quantidade_comprada
+            nova_quantidade = produto[3] + quantidade_comprada
             cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
             print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
 
@@ -345,7 +365,52 @@ def validacao_de_cadastro_produto(nome, categoria, quantidade, preco, localizaca
     return True
 
 def emitir_relatorio(): #Função para emitir relatório
-    print('')
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    estoque_baixo_limite = 20
+    excesso_estoque_limite = 100
+    
+    cursor.execute('SELECT id, nome, quantidade FROM produtos WHERE quantidade < ?', (estoque_baixo_limite,))
+    produtos_baixos = cursor.fetchall()
+    
+    if produtos_baixos:
+        produtos_baixo_nomes = [produto[1] for produto in produtos_baixos]
+        produtos_baixo_quantidades = [produto[2] for produto in produtos_baixos]
+
+        plt.figure(figsize=(10, 6))
+        plt.barh(produtos_baixo_nomes, produtos_baixo_quantidades, color='red')
+        plt.xlabel('Quantidade em Estoque')
+        plt.ylabel('Produtos')
+        plt.title('Produtos com Estoque Baixo')
+        plt.show()
+
+    else:
+        print("Não há produtos com estoque baixo.")
+    
+    print("Fim do Relatório de Estoque Baixo")
+
+    print("Produtos com Excesso de Estoque")
+    cursor.execute('SELECT id, nome, quantidade FROM produtos WHERE quantidade > ?', (excesso_estoque_limite,))
+    produtos_excesso = cursor.fetchall()
+    
+    if produtos_excesso:
+        produtos_excesso_nomes = [produto[1] for produto in produtos_excesso]
+        produtos_excesso_quantidades = [produto[2] for produto in produtos_excesso]
+        
+        plt.figure(figsize=(10, 6))
+        plt.barh(produtos_excesso_nomes, produtos_excesso_quantidades, color='green')
+        plt.xlabel('Quantidade em Estoque')
+        plt.ylabel('Produtos')
+        plt.title('Produtos com Excesso de Estoque')
+        plt.show()
+    
+    else:
+        print("Não há produtos com excesso de estoque.")
+    
+    print("Fim do Relatório de Excesso de Estoque")
+
+    conn.close()
 
 def menu_funcao():
     print("0 - Gerente")
@@ -364,7 +429,7 @@ def menu_usuario():
     print("0 - Voltar ao Menu Principal")
     print("1 - Solicitar Compra de Produto")
     print("2 - Emitir Relatório Semanal")
-    print("3 - Listar os Produtos (Essa função não estava no trabalho. Mas é útil para visualizar os produtos disponiveis.)")
+    print("3 - Listar os Produtos")
 
 def menu_gerente():
     print("Gerente, por favor, selecione uma opção:")
