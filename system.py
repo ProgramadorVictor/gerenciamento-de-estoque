@@ -288,6 +288,40 @@ def registros(): #Registro de alterações
     conn.commit()
     conn.close()
 
+def adicionar_estoque_de_produto():
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    produto_id = int(input("Digite o ID do produto:"))
+    cursor.execute("SELECT * FROM produtos WHERE id = ?", (produto_id,))
+    produto = cursor.fetchone()
+
+    if produto is None:
+        print("O produto não existe.")
+        return
+    
+    quantidade_anterior = produto[3]
+    quantidade_adicionada = int(input(f"Digite a quantidade a ser adicionada no estoque do produto ({produto[1]}): "))
+    nova_quantidade = quantidade_anterior+quantidade_adicionada
+
+    cursor.execute('''
+        UPDATE produtos
+        SET quantidade = ?
+        WHERE id = ?
+    ''', (nova_quantidade, produto_id))
+
+    descricao = f"Produto '{produto[1]}', ID: {produto[0]}, Adicionado ao estoque {quantidade_adicionada}, Quantidade anterior {quantidade_anterior}, Nova quantidade {nova_quantidade}"
+    data_registro = datetime.datetime.now().isoformat()
+
+    cursor.execute('''
+        INSERT INTO registros (descricao, data_registro)
+        VALUES (?, ?)
+    ''', (descricao, data_registro))
+
+    conn.commit()
+    print(f"Estoque do produto '{produto[1]}' atualizado com sucesso!")
+    conn.close()
+
 def emitir_relatorio(): #Função para emitir relatório
     print('')
 
@@ -354,6 +388,8 @@ def main():
                     produto = Produto(nome, categoria, quantidade, preco, localizacao)
                     adicionar_produto(produto)
                     print("Produto adicionado com sucesso!")
+                elif operacao == '2':
+                    adicionar_estoque_de_produto()
                 elif operacao == '3':
                     atualizar_localizacao_produto()
         elif escolha == '2':
