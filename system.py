@@ -81,6 +81,16 @@ def solicitar_compra(produto_id, quantidade): #Solicitar compras, somente para u
             conn.commit()
             print("Solicitação de compra enviada com sucesso!")
     conn.close()
+def visualizar_todas_solicitacoes():
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM solicitacoes")
+    solicitacoes = cursor.fetchall()
+
+    for solicitacao in solicitacoes:
+        print(f"ID Solicitação: {solicitacao[0]} | Produto ID: {solicitacao[1]} | Quantidade: {solicitacao[2]} | Data: {solicitacao[3]} | Status: {solicitacao[4]}")
+    conn.close()
 
 def visualizar_solicitacoes_pendentes():
     conn = sqlite3.connect('estoque.db')
@@ -236,6 +246,7 @@ def menu_gerente():
     print("0 - Voltar ao Menu Principal")
     print("1 - Visualizar Solicitações Pendentes")
     print("2 - Aprovar/Rejeitar Solicitação")
+    print("3 - Visualizar todas as Solicitações")
 
 def main():
     criar_banco() #Cria o banco de dados juntamente com a tabela.
@@ -253,6 +264,8 @@ def main():
                     visualizar_solicitacoes_pendentes()
                 elif operacao == '2': #Aprova ou rejeitar as solicitação.
                     aprovar_rejeitar_solicitacao()
+                elif operacao == '3':
+                    visualizar_todas_solicitacoes()
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
