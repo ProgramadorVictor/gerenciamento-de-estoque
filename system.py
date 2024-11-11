@@ -111,8 +111,8 @@ def visualizar_solicitacoes_pendentes():
 def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
-
-    cursor.execute('SELECT * FROM solicitacoes WHERE id = ?', (id_solicitacao,)) # Verifica se a solicitação existe.
+    
+    cursor.execute('SELECT * FROM solicitacoes WHERE id = ? AND status = ?', (id_solicitacao, 'pendente')) # Verifica se a solicitação existe e é pendente.
     solicitacao = cursor.fetchone()
 
     if solicitacao is None:
@@ -124,7 +124,7 @@ def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
             produto_quantidade = produto[3]
             quantidade_comprada = solicitacao[2]
             
-            if produto:
+            if produto: 
                 produto_quantidade = produto[3]
                 quantidade_comprada = solicitacao[2]
 
