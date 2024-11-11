@@ -159,6 +159,45 @@ def produtos_para_usuario():
     
     conn.close()
 
+def atualizar_localizacao_produto():
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id, nome, quantidade, localizacao FROM produtos")    
+    produtos = cursor.fetchall()
+
+    for produto in produtos:
+        id_produto = produto[0]; nome = produto[1]; quantidade = produto[2]; localizacao = produto[3];
+        print(f"Produto ID: {id_produto} | Nome do Produto: {nome} | Quantidade: {quantidade}| Localizacao: {localizacao}")
+
+    produto_id = int(input("Digite o ID do produto: "))
+    cursor.execute("SELECT id, nome, quantidade, localizacao FROM produtos WHERE id = ?", (produto_id,)) #Busca o produto que ele escolheu.
+    produto = cursor.fetchone()
+
+    if produto is None: #Se não encontra o produto cancelar.
+        print(f"Produto com ID {produto_id} não encontrado.")
+        conn.close()
+        return
+    
+    nome = produto[1]
+    quantidade = produto[2]
+    localizacao_atual = produto[3]
+    print(f"Produto: {nome} | Quantidade: {quantidade} | Localização atual: {localizacao_atual}")
+    
+    nova_localizacao = input("Digite a nova localização do produto: ")
+
+    cursor.execute('''
+        UPDATE produtos
+        SET localizacao = ?
+        WHERE id = ?
+    ''', (nova_localizacao, produto_id))
+
+    conn.commit()
+
+    print(f"Localização do produto '{nome}' (ID: {produto_id}) foi atualizada de '{localizacao_atual}' para '{nova_localizacao}'.")
+
+    conn.close()
+
 def emitir_relatorio(): #Função para emitir relatório
     print('')
 
@@ -171,6 +210,8 @@ def menu_estoquista():
     print("Estoquista. Por favor, selecione uma opção:")
     print("0 - Voltar ao Menu Principal")
     print("1 - Adicionar Produto")
+    print("2 - Atualizar Estoque")
+    print("3 - Atualizar Localização do Produto")
 
 def menu_usuario():
     print("Usuário, Por favor. Selecione uma opção:")
@@ -221,6 +262,8 @@ def main():
                     produto = Produto(nome, categoria, quantidade, preco, localizacao)
                     adicionar_produto(produto)
                     print("Produto adicionado com sucesso!")
+                elif operacao == '3':
+                    atualizar_localizacao_produto()
         elif escolha == '2':
             print("Você selecionou: Usuário")
             while True:
