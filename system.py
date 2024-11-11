@@ -115,26 +115,27 @@ def visualizar_solicitacoes_pendentes():
     cursor = conn.cursor()
 
     # Exibe as solicitações pendentes
-    cursor.execute("SELECT * FROM solicitacoes WHERE status = 'pendente'")
+    cursor.execute('''
+        SELECT s.id, s.produto_id, s.quantidade, s.data, s.status, p.nome, p.quantidade as estoque
+        FROM solicitacoes s
+        JOIN produtos p ON s.produto_id = p.id
+        WHERE s.status = 'pendente'
+    ''') #Realizando um JOIN, para junção das tabelas e consultas.
     solicitacoes = cursor.fetchall()
 
     if not solicitacoes: # Verifica se existe solicitações, se não existir, não mostra elas.
         print("Não há solicitações pendentes.")
         return False
-    else:
-        cursor.execute("SELECT * FROM produtos")
-        produtos = cursor.fetchall()
-        for solicitacao in solicitacoes:
-            produto_id = solicitacao[1]
-            quantidade = solicitacao[2]
-            data = solicitacao[3]
-            print(f"ID Solicitação: {solicitacao[0]} | Produto ID: {produto_id} | Quantidade: {quantidade} | Data: {data}")
-        for produto in produtos: #Melhorando a visualização para saber qual produto esta relacionado.
-            produto_id = produto[0]
-            produto_nome = produto[1]
-            quantidade = produto[3]
-            localizacao = produto[5]
-            print(f"Produto ID: {produto_id} | Nome do Produto: {produto_nome} | Quantidade: {quantidade} | Localização: {localizacao}")
+    
+    for solicitacao in solicitacoes:
+        id_solicitacao = solicitacao[0]
+        produto_id = solicitacao[1]
+        quantidade_solicitada = solicitacao[2]
+        data_solicitacao = solicitacao[3]
+        produto_nome = solicitacao[5]
+        estoque_produto = solicitacao[6]
+
+        print(f"ID Solicitação: {id_solicitacao} | Produto ID: {produto_id} | Produto: {produto_nome} | Solicitado: {quantidade_solicitada} | Em estoque: {estoque_produto} | Data: {data_solicitacao}")
 
     conn.close()
 
@@ -302,6 +303,9 @@ def adicionar_estoque_de_produto():
     
     quantidade_anterior = produto[3]
     quantidade_adicionada = int(input(f"Digite a quantidade a ser adicionada no estoque do produto ({produto[1]}): "))
+    if(quantidade_adicionada < 0 or quantidade_adicionada == 0):
+        print("A quantidade adicionada não pode ser 0 ou igual a 0")
+        return
     nova_quantidade = quantidade_anterior+quantidade_adicionada
 
     cursor.execute('''
@@ -380,11 +384,15 @@ def main():
                 if operacao == '0':
                     break
                 elif operacao == '1': # Adicionar um produto
+
+                    ##Mexer
                     nome = input("Digite o nome do produto: ")
                     categoria = input("Digite a categoria do produto: ")
                     quantidade = int(input("Digite a quantidade do produto: "))
                     preco = float(input("Digite o preço do produto: "))
                     localizacao = input("Digite a localização do produto: ")
+                    validar_insercao_de_produto(nome, categoria, quantidade, preco, localizacao)
+
                     produto = Produto(nome, categoria, quantidade, preco, localizacao)
                     adicionar_produto(produto)
                     print("Produto adicionado com sucesso!")
