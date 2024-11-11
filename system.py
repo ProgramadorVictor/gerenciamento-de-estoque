@@ -89,12 +89,13 @@ def visualizar_solicitacoes_pendentes():
     # Exibe as solicitações pendentes
     cursor.execute("SELECT * FROM solicitacoes WHERE status = 'pendente'")
     solicitacoes = cursor.fetchall()
-    cursor.execute("SELECT * FROM produtos")
-    produtos = cursor.fetchall()
 
     if not solicitacoes: # Verifica se existe solicitações, se não existir, não mostra elas.
         print("Não há solicitações pendentes.")
+        return False
     else:
+        cursor.execute("SELECT * FROM produtos")
+        produtos = cursor.fetchall()
         for solicitacao in solicitacoes:
             produto_id = solicitacao[1]
             quantidade = solicitacao[2]
@@ -104,44 +105,54 @@ def visualizar_solicitacoes_pendentes():
             produto_id = produto[0]
             produto_nome = produto[1]
             quantidade = produto[3]
-            print(f"Produto ID: {produto_id} | Nome do Produto: {produto_nome} | Quantidade: {quantidade}")
+            localizacao = produto[5]
+            print(f"Produto ID: {produto_id} | Nome do Produto: {produto_nome} | Quantidade: {quantidade} | Localização: {localizacao}")
 
     conn.close()
 
-def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
+def aprovar_rejeitar_solicitacao():
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
-    
+
+    if(visualizar_solicitacoes_pendentes() == False): #Chamando o método para mostrar novamente as solicitações pendentes, caso a pessoa esqueça.
+        return
+    #OBS: Caso não existe solicitações, automaticamente ele entra no primeiro if do método visualizar_solicitacoes_pendentes()
+
+    id_solicitacao = int(input("Digite o ID da solicitação: "))
     cursor.execute('SELECT * FROM solicitacoes WHERE id = ? AND status = ?', (id_solicitacao, 'pendente')) # Verifica se a solicitação existe e é pendente.
     solicitacao = cursor.fetchone()
 
-    if solicitacao is None:
+    if solicitacao is None: #Isso aqui é redudante. Pois a função  visualizar_solicitacoes_pendentes(), ja verifica.
         print("Solicitação nao encontrada.")
-    else:
-        if aprovacao.lower() == 'aprovar':
-            cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
-            produto = cursor.fetchone()
+        conn.close()
+        return
+
+    aprovacao = input("Digite 'aprovar' ou 'rejeitar': ")
+
+    if aprovacao.lower() == 'aprovar':
+        cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
+        produto = cursor.fetchone()
+        produto_quantidade = produto[3]
+        quantidade_comprada = solicitacao[2]
+        
+        if produto: 
             produto_quantidade = produto[3]
             quantidade_comprada = solicitacao[2]
-            
-            if produto: 
-                produto_quantidade = produto[3]
-                quantidade_comprada = solicitacao[2]
 
-            if(quantidade_comprada > produto_quantidade):
-                print(f"Não temos a quantidade disponivel para aprovação da compra.")
-            else:
-                nova_quantidade = produto[3] - quantidade_comprada
-                cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
-                print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
-
-                cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada', id_solicitacao))
-        elif aprovacao.lower() == 'rejeitar':
-            cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('rejeitada', id_solicitacao))
-            print("Solicitação rejeitada.")
+        if(quantidade_comprada > produto_quantidade):
+            print(f"Não temos a quantidade disponivel para aprovação da compra.")
         else:
-            print("Opção de aprovação inválida. Use 'aprovar' ou 'rejeitar'.")
-        conn.commit()
+            nova_quantidade = produto[3] - quantidade_comprada
+            cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
+            print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
+
+            cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada', id_solicitacao))
+    elif aprovacao.lower() == 'rejeitar':
+        cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('rejeitada', id_solicitacao))
+        print("Solicitação rejeitada.")
+    else:
+        print("Opção de aprovação inválida. Use 'aprovar' ou 'rejeitar'.")
+    conn.commit()
 
     conn.close()
 
@@ -231,7 +242,6 @@ def main():
     while True:
         menu_funcao()
         escolha = input("Digite o número da sua escolha (0, 1 ou 2): ")
-
         if escolha == '0':
             print("Você selecionou: Gerente")
             while True:
@@ -242,9 +252,7 @@ def main():
                 elif operacao == '1': #Visualizar as solicitações de usuários pendentes
                     visualizar_solicitacoes_pendentes()
                 elif operacao == '2': #Aprova ou rejeitar as solicitação.
-                    id_solicitacao = int(input("Digite o ID da solicitação: "))
-                    aprovacao = input("Digite 'aprovar' ou 'rejeitar': ")
-                    aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao)
+                    aprovar_rejeitar_solicitacao()
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
