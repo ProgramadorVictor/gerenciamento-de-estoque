@@ -42,6 +42,13 @@ def criar_banco():
         )
     ''') #Criação de tabela para solicitações de usuários.
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS registro_localizacao (
+            descricao TEXT NOT NULL,
+            data_registro TEXT NOT NULL
+        )
+    ''')
+
     conn.commit() #Faz o commit das mudançãs
     conn.close() #Fecha a conexão
 
@@ -216,7 +223,36 @@ def atualizar_localizacao_produto():
     conn.commit()
 
     print(f"Localização do produto '{nome}' (ID: {produto_id}) foi atualizada de '{localizacao_atual}' para '{nova_localizacao}'.")
+    alterou_localizacao(nome, produto_id, localizacao_atual, nova_localizacao)
 
+    conn.close()
+
+def alterou_localizacao(nome, produto_id, localizacao_atual, nova_localizacao):
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    descricao = f"Produto '{nome}', ID: {produto_id}, Movido: {localizacao_atual}, Para: {nova_localizacao}"
+    data_registro = datetime.datetime.now().isoformat()
+
+    cursor.execute('''
+        INSERT INTO registro_localizacao (descricao, data_registro)
+        VALUES (?, ?)
+    ''', (descricao, data_registro))
+
+    conn.commit()
+    conn.close()
+
+def registro_de_localizacoes():
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT descricao, data_registro FROM registro_localizacao")    
+    registros = cursor.fetchall()
+
+    for registro in registros:
+        print(f"Registro: {registro[0]} | Data de movimentação: {registro[1]}")
+
+    conn.commit()
     conn.close()
 
 def emitir_relatorio(): #Função para emitir relatório
@@ -233,6 +269,7 @@ def menu_estoquista():
     print("1 - Adicionar Produto")
     print("2 - Atualizar Estoque")
     print("3 - Atualizar Localização do Produto")
+    print("4 - Ver registro de localizações")
 
 def menu_usuario():
     print("Usuário, Por favor. Selecione uma opção:")
@@ -285,6 +322,8 @@ def main():
                     print("Produto adicionado com sucesso!")
                 elif operacao == '3':
                     atualizar_localizacao_produto()
+                elif operacao == '4':
+                    registro_de_localizacoes()
         elif escolha == '2':
             print("Você selecionou: Usuário")
             while True:
