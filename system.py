@@ -121,14 +121,26 @@ def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
         if aprovacao.lower() == 'aprovar':
             cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
             produto = cursor.fetchone()
+            produto_quantidade = produto[3]
             quantidade_comprada = solicitacao[2]
-
+            
             if produto:
+                produto_quantidade = produto[3]
+                quantidade_comprada = solicitacao[2]
+
+            if(quantidade_comprada > produto_quantidade):
+                print(f"Não temos a quantidade disponivel para aprovação da compra.")
+            else:
                 nova_quantidade = produto[3] - quantidade_comprada
                 cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
                 print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
 
-        cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada' if aprovacao.lower() == 'aprovar' else 'rejeitada', id_solicitacao))
+                cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada', id_solicitacao))
+        elif aprovacao.lower() == 'rejeitar':
+            cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('rejeitada', id_solicitacao))
+            print("Solicitação rejeitada.")
+        else:
+            print("Opção de aprovação inválida. Use 'aprovar' ou 'rejeitar'.")
         conn.commit()
 
     conn.close()
