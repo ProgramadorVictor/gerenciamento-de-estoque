@@ -43,7 +43,7 @@ def criar_banco():
     ''') #Criação de tabela para solicitações de usuários.
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS registro_localizacao (
+        CREATE TABLE IF NOT EXISTS registros (
             descricao TEXT NOT NULL,
             data_registro TEXT NOT NULL
         )
@@ -234,18 +234,18 @@ def alterou_localizacao(nome, produto_id, localizacao_atual, nova_localizacao):
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
 
-    descricao = f"Produto '{nome}', ID: {produto_id}, Movido: {localizacao_atual}, Para: {nova_localizacao}"
+    descricao = f"Produto '{nome}', ID: {produto_id}, Movido de: {localizacao_atual}, Para: {nova_localizacao}"
     data_registro = datetime.datetime.now().isoformat()
 
     cursor.execute('''
-        INSERT INTO registro_localizacao (descricao, data_registro)
+        INSERT INTO registros (descricao, data_registro)
         VALUES (?, ?)
     ''', (descricao, data_registro))
 
     conn.commit()
     conn.close()
 
-def registro_de_localizacoes():
+def registros(): #Registro de alterações
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
 
@@ -253,7 +253,7 @@ def registro_de_localizacoes():
     registros = cursor.fetchall()
 
     for registro in registros:
-        print(f"Registro: {registro[0]} | Data de movimentação: {registro[1]}")
+        print(f"Registro: {registro[0]} | Data de registro: {registro[1]}")
 
     conn.commit()
     conn.close()
@@ -272,7 +272,6 @@ def menu_estoquista():
     print("1 - Adicionar Produto")
     print("2 - Atualizar Estoque")
     print("3 - Atualizar Localização do Produto")
-    print("4 - Ver registro de localizações")
 
 def menu_usuario():
     print("Usuário, Por favor. Selecione uma opção:")
@@ -287,6 +286,7 @@ def menu_gerente():
     print("1 - Visualizar Solicitações Pendentes")
     print("2 - Aprovar/Rejeitar Solicitação")
     print("3 - Visualizar todas as Solicitações")
+    print("4 - Visualizar registros")
 
 def main():
     criar_banco() #Cria o banco de dados juntamente com a tabela.
@@ -306,6 +306,8 @@ def main():
                     aprovar_rejeitar_solicitacao()
                 elif operacao == '3':
                     visualizar_todas_solicitacoes()
+                elif operacao == '4':
+                    registros()
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
@@ -319,14 +321,11 @@ def main():
                     quantidade = int(input("Digite a quantidade do produto: "))
                     preco = float(input("Digite o preço do produto: "))
                     localizacao = input("Digite a localização do produto: ")
-
                     produto = Produto(nome, categoria, quantidade, preco, localizacao)
                     adicionar_produto(produto)
                     print("Produto adicionado com sucesso!")
                 elif operacao == '3':
                     atualizar_localizacao_produto()
-                elif operacao == '4':
-                    registro_de_localizacoes()
         elif escolha == '2':
             print("Você selecionou: Usuário")
             while True:
