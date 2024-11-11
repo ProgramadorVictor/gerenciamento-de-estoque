@@ -326,6 +326,24 @@ def adicionar_estoque_de_produto():
     print(f"Estoque do produto '{produto[1]}' atualizado com sucesso!")
     conn.close()
 
+def validacao_de_cadastro_produto(nome, categoria, quantidade, preco, localizacao):
+    if not nome.strip():
+        print("O nome do produto não pode ser vazio.")
+        return False
+    if not categoria.strip():
+        print("A categoria do produto não pode ser vazia.")
+        return False
+    if quantidade <= 0:
+        print("A quantidade do produto deve ser maior que zero.")
+        return False
+    if preco <= 0:
+        print("O preço do produto deve ser maior que zero.")
+        return False
+    if not localizacao.strip():
+        print("A localização do produto não pode ser vazia.")
+        return False
+    return True
+
 def emitir_relatorio(): #Função para emitir relatório
     print('')
 
@@ -384,18 +402,18 @@ def main():
                 if operacao == '0':
                     break
                 elif operacao == '1': # Adicionar um produto
-
-                    ##Mexer
                     nome = input("Digite o nome do produto: ")
                     categoria = input("Digite a categoria do produto: ")
                     quantidade = int(input("Digite a quantidade do produto: "))
                     preco = float(input("Digite o preço do produto: "))
                     localizacao = input("Digite a localização do produto: ")
-                    validar_insercao_de_produto(nome, categoria, quantidade, preco, localizacao)
-
-                    produto = Produto(nome, categoria, quantidade, preco, localizacao)
-                    adicionar_produto(produto)
-                    print("Produto adicionado com sucesso!")
+                    if validacao_de_cadastro_produto(nome, categoria, quantidade, preco, localizacao):
+                        produto = Produto(nome, categoria, quantidade, preco, localizacao)
+                        adicionar_produto(produto)
+                        print("Produto adicionado com sucesso!")
+                        return
+                    else:
+                        print("Produto não cadastrado!")
                 elif operacao == '2':
                     adicionar_estoque_de_produto()
                 elif operacao == '3':
