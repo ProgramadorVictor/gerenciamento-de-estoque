@@ -61,6 +61,14 @@ def adicionar_produto(produto):
         VALUES (?, ?, ?, ?, ?)
     ''', (produto.nome, produto.categoria, produto.quantidade, produto.preco, produto.localizacao)) #Inserindo os valores
 
+    descricao = f"Produto '{produto.nome}', Quantidade: {produto.quantidade}, Adicionado ao estoque."
+    data_registro = datetime.datetime.now().isoformat()
+
+    cursor.execute('''
+        INSERT INTO registros (descricao, data_registro)
+        VALUES (?, ?)
+    ''', (descricao, data_registro))
+
     conn.commit()
     conn.close()
 
@@ -249,7 +257,7 @@ def registros(): #Registro de alterações
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
 
-    cursor.execute("SELECT descricao, data_registro FROM registro_localizacao")    
+    cursor.execute("SELECT descricao, data_registro FROM registros")    
     registros = cursor.fetchall()
 
     for registro in registros:
