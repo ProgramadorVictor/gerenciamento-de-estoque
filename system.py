@@ -134,7 +134,18 @@ def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
     conn.close()
 
 def produtos_para_usuario():
-    print("Produtos disponiveis para o usuario")
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    #Exibe os produtos
+    cursor.execute("SELECT id, nome, preco FROM produtos")    
+    produtos = cursor.fetchall()
+
+    for produto in produtos:
+        nome = produto[1]; id_produto = produto[0]; preco = produto[2]
+        print(f"Produto ID: {id_produto} | Nome do Produto: {nome} | Preço: {preco}")
+    
+    conn.close()
 
 def emitir_relatorio(): #Função para emitir relatório
     print('')
