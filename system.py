@@ -37,6 +37,7 @@ def criar_banco():
             produto_id INTEGER NOT NULL,
             quantidade INTEGER NOT NULL,
             data TEXT NOT NULL,
+            status TEXT DEFAULT 'pendente',
             FOREIGN KEY (produto_id) REFERENCES produtos (id)
         )
     ''') #Criação de tabela para solicitações de usuários.
@@ -56,6 +57,7 @@ def adicionar_produto(produto):
     conn.commit()
     conn.close()
 
+#As solicitações do usuario são definidas por 'pendente', 'aprovada' e 'negada'. Que são definidas posteriormentes pelo gerente da aplicação.
 def solicitar_compra(produto_id, quantidade): #Solicitar compras, somente para usuários.
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
@@ -68,12 +70,55 @@ def solicitar_compra(produto_id, quantidade): #Solicitar compras, somente para u
         print("Produto não encontrado. Solicitação de compra não pode ser realizada.")
     else:
         cursor.execute('''
-            INSERT INTO solicitacoes (produto_id, quantidade, data)
-            VALUES (?, ?, ?)
-        ''', (produto_id, quantidade, datetime.datetime.now().isoformat())) # Se o produto existe, registra a solicitação.
+            INSERT INTO solicitacoes (produto_id, quantidade, data, status)
+            VALUES (?, ?, ?, ?)
+        ''', (produto_id, quantidade, datetime.datetime.now().isoformat(), 'pendente')) #Se o produto existe, registra a solicitação.
 
         conn.commit()
         print("Solicitação de compra enviada com sucesso!")
+    conn.close()
+
+def visualizar_solicitacoes_pendentes():
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    # Exibe as solicitações pendentes
+    cursor.execute("SELECT * FROM solicitacoes WHERE status = 'pendente'")
+    solicitacoes = cursor.fetchall()
+
+    if not solicitacoes: # Verifica se existe solicitações, se não existir, não mostra elas.
+        print("Não há solicitações pendentes.")
+    else:
+        for solicitacao in solicitacoes:
+            produto_id = solicitacao[1]
+            quantidade = solicitacao[2]
+            data = solicitacao[3]
+            print(f"ID Solicitação: {solicitacao[0]} | Produto ID: {produto_id} | Quantidade: {quantidade} | Data: {data}")
+
+    conn.close()
+
+def aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao):
+    conn = sqlite3.connect('estoque.db')
+    cursor = conn.cursor()
+
+    cursor.execute('SELECT * FROM solicitacoes WHERE id = ?', (id_solicitacao,)) # Verifica se a solicitação existe.
+    solicitacao = cursor.fetchone()
+
+    if solicitacao is None:
+        print("Solicitação nao encontrada.")
+    else:
+        if aprovacao.lower() == 'aprovar':
+            cursor.execute('SELECT * FROM produtos WHERE id = ?', (solicitacao[1],))
+            produto = cursor.fetchone()
+
+            if produto:
+                nova_quantidade = produto[3] + solicitacao[2] 
+                cursor.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (nova_quantidade, produto[0]))
+                print(f"Compra aprovada. Produto {produto[1]} (ID: {produto[0]}) quantidade atualizada.")
+
+        cursor.execute('UPDATE solicitacoes SET status = ? WHERE id = ?', ('aprovada' if aprovacao.lower() == 'aprovar' else 'rejeitada', id_solicitacao))
+        conn.commit()
+
     conn.close()
 
 def emitir_relatorio(): #Função para emitir relatório
@@ -95,6 +140,12 @@ def menu_usuario():
     print("2 - Emitir Relatório Semanal")
     print("3 - Voltar ao Menu Principal")
 
+def menu_gerente():
+    print("Gerente, por favor, selecione uma opção:")
+    print("1 - Visualizar Solicitações Pendentes")
+    print("2 - Aprovar/Rejeitar Solicitação")
+    print("3 - Voltar ao Menu Principal")
+
 def main():
     criar_banco() #Cria o banco de dados juntamente com a tabela.
     while True:
@@ -103,7 +154,17 @@ def main():
 
         if escolha == '0':
             print("Você selecionou: Gerente")
-            break
+            while True:
+                menu_gerente()
+                operacao = input("Digite o número da sua opção: ")
+                if operacao == '1': #Visualizar as solicitações de usuários pendentes
+                    visualizar_solicitacoes_pendentes()
+                elif operacao == '2': #Aprova ou rejeitar as solicitação.
+                    id_solicitacao = int(input("Digite o ID da solicitação: "))
+                    aprovacao = input("Digite 'aprovar' ou 'rejeitar': ")
+                    aprovar_rejeitar_solicitacao(id_solicitacao, aprovacao)
+                elif operacao == '3':
+                    break
         elif escolha == '1':
             print("Você selecionou: Estoquista")
             while True:
