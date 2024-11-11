@@ -65,28 +65,31 @@ def adicionar_produto(produto):
     conn.close()
 
 #As solicitações do usuario são definidas por 'pendente', 'aprovada' e 'negada'. Que são definidas posteriormentes pelo gerente da aplicação.
-def solicitar_compra(produto_id, quantidade): #Solicitar compras, somente para usuários.
+def solicitar_compra(): #Solicitar compras, somente para usuários.
     conn = sqlite3.connect('estoque.db')
     cursor = conn.cursor()
 
-    # Verifica se o produto_id existe na tabela de produtos
-    cursor.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,))
+    produto_id = int(input("Digite o ID do produto: "))
+    cursor.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,))  # Verifica se o produto_id existe na tabela de produtos
     produto = cursor.fetchone()
-    
+
     if produto is None: #Se o produto_id não existir.
         print("Produto não encontrado. Solicitação de compra não pode ser realizada.")
-    else:
-        estoque_disponivel = produto[3];
-        if quantidade > estoque_disponivel: #Caso o usuario solicite mais do que tem ocorre um aviso e retornar a quantidade disponivel.
-            print(f"Quantidades insuficiente no estoque. Disponivel no momento: {estoque_disponivel}.")
-        else:
-            cursor.execute('''
-                INSERT INTO solicitacoes (produto_id, quantidade, data, status)
-                VALUES (?, ?, ?, ?)
-            ''', (produto_id, quantidade, datetime.datetime.now().isoformat(), 'pendente')) #Se o produto existe, registra a solicitação.
+        return
+    
+    quantidade = int(input("Digite a quantidade a ser solicitada: "))
 
-            conn.commit()
-            print("Solicitação de compra enviada com sucesso!")
+    estoque_disponivel = produto[3];
+    if quantidade > estoque_disponivel: #Caso o usuario solicite mais do que tem ocorre um aviso e retornar a quantidade disponivel.
+        print(f"Quantidades insuficiente no estoque. Disponivel no momento: {estoque_disponivel}.")
+    else:
+        cursor.execute('''
+            INSERT INTO solicitacoes (produto_id, quantidade, data, status)
+            VALUES (?, ?, ?, ?)
+        ''', (produto_id, quantidade, datetime.datetime.now().isoformat(), 'pendente')) #Se o produto existe, registra a solicitação.
+
+        conn.commit()
+        print("Solicitação de compra enviada com sucesso!")
     conn.close()
 def visualizar_todas_solicitacoes():
     conn = sqlite3.connect('estoque.db')
@@ -332,9 +335,7 @@ def main():
                 if operacao == '0': # Voltar para o menu principal
                     break
                 elif operacao == '1': # Solicitar compra de produto
-                    produto_id = int(input("Digite o ID do produto: "))
-                    quantidade = int(input("Digite a quantidade a ser solicitada: "))
-                    solicitar_compra(produto_id, quantidade)
+                    solicitar_compra()
                 elif operacao == '2': # Emitir relatório semanal
                     emitir_relatorio()
                 elif operacao == '3': # Mostrar os produtos disponiveis
