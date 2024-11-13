@@ -53,20 +53,20 @@ def criar_banco():
     #Descomente a linha abaixo caso queira produtos pré-definidos. Segue os passos abaixos.
     #1. Descomente, rode o programa e comente novamente.
 
-    # produtos = [
-    #     ('Chocolate', 'Alimentos', 150, 5.99, 'Prateleira 1'),
-    #     ('Coca-Cola', 'Bebidas', 120, 3.50, 'Prateleira 2'),
-    #     ('Chips', 'Alimentos', 15, 4.50, 'Prateleira 3'),
-    #     ('Fanta', 'Bebidas', 18, 5.00, 'Prateleira 2'),
-    #     ('Amendoim', 'Alimentos', 30, 6.20, 'Prateleira 2'),
-    #     ('Pepsi', 'Bebidas', 12, 3.00, 'Prateleira 2'),
-    # ]
+    produtos = [
+        ('Chocolate', 'Alimentos', 150, 5.99, 'Prateleira 1'),
+        ('Coca-Cola', 'Bebidas', 120, 3.50, 'Prateleira 2'),
+        ('Chips', 'Alimentos', 15, 4.50, 'Prateleira 3'),
+        ('Fanta', 'Bebidas', 18, 5.00, 'Prateleira 2'),
+        ('Amendoim', 'Alimentos', 30, 6.20, 'Prateleira 2'),
+        ('Pepsi', 'Bebidas', 12, 3.00, 'Prateleira 2'),
+    ]
 
-    # for nome, categoria, quantidade, preco, localizacao in produtos:
-    #     cursor.execute('''
-    #         INSERT INTO produtos (nome, categoria, quantidade, preco, localizacao)
-    #         VALUES (?, ?, ?, ?, ?)
-    #     ''', (nome, categoria, quantidade, preco, localizacao))
+    for nome, categoria, quantidade, preco, localizacao in produtos:
+        cursor.execute('''
+            INSERT INTO produtos (nome, categoria, quantidade, preco, localizacao)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (nome, categoria, quantidade, preco, localizacao))
 
 
     conn.commit() #Faz o commit das mudançãs
